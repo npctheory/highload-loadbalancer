@@ -1,6 +1,7 @@
 CREATE USER docker;
 CREATE DATABASE highloadsocial;
 GRANT ALL PRIVILEGES ON DATABASE highloadsocial TO docker;
+CREATE ROLE replicator WITH REPLICATION LOGIN ENCRYPTED PASSWORD 'pass';
 
 \c highloadsocial;
 
