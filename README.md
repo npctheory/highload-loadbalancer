@@ -1,7 +1,7 @@
 ## О проекте
 Домашнее задание по балансировке.  
 Проект состоит из следующих компонентов:  
-* Приложение .NET 8 WebApi в папке ./server, которое собирается в образ server:local и контейнеры server1 и server2  
+* Приложение .NET WebApi в папке ./server, которое собирается в образ server:local и контейнеры server1 и server2  
 * Бэкап postgres в папке ./db, который собирается в образ db:local. На его основе создаются контейнеры pg_master, pg_slave1, pg_slave2  
 * Контейниризованный ansible в папке ./ansible. В папке ./ansible/playbooks находится плейбук main.yml, необходимый для настройки стриминговой репликации pg_master -> pg_slave1, pg_slave2.
 *
@@ -28,6 +28,8 @@ docker exec -it ansible bash
 ansible-playbook playbooks/main.yml
 ```
 Как это всё вместе должно работать:  
+
+[setup.webm](https://github.com/user-attachments/assets/77300490-5382-4f02-aa14-2d342c9c911b)
 
 ### Nginx  
 Docker Compose запустит два инстанса бэкенда: server1 и server2.  
@@ -67,8 +69,9 @@ events {
 }
 ```
 
-На видео показано что происходит при отключениях инстансов бэкенда:  
+Пример того как работает приложение при инстансов бэкенда:  
 
+[nginx.webm](https://github.com/user-attachments/assets/bf1b3746-1e33-4ece-94f9-0db4ff3fc42f)
 
 
 ### HAProxy
@@ -110,3 +113,6 @@ backend pg_read_back
     server pg_slave2 pg_slave2:5433 check
 ```
 Пример того как работает приложение при отключении слейвов Postgres:  
+
+[postgres.webm](https://github.com/user-attachments/assets/4549972c-ef82-434f-a71d-2f715773fea8)
+
