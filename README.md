@@ -112,5 +112,3 @@ backend pg_read_back
 ```
 Пример того как работает приложение при отключении слейвов Postgres:  
 
-[postgres.webm](https://github.com/user-attachments/assets/4549972c-ef82-434f-a71d-2f715773fea8)
-
