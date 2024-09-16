@@ -20,7 +20,7 @@ docker network create highload_net
 ```bash
 docker compose up --build -d
 ```
-Для того чтобы репликация работала выполнить плейбук:  
+Когда все контейнеры будут запущены, для того чтобы репликация работала, выполнить плейбук main.yml:  
 ```bash
 docker exec -it ansible bash
 ```
