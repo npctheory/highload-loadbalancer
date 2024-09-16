@@ -7,7 +7,7 @@
 * Nginx и HAProxy, подключающиеся в Docker Compose. Конфигурационные файлы в корневой папке репозитория.
 * Redis, RabbitMQ, подключающиеся в Docker Compose.  
 ### Начало работы
-Склонировать проект, сделать cd в корень репозитория и запустить Docker Compose.  
+Склонировать проект, сделать cd в корень репозитория.  
 ```bash
 https://github.com/npctheory/highload-loadbalancer.git
 cd highload-loadbalancer
