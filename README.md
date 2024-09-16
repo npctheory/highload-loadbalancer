@@ -107,8 +107,9 @@ backend pg_read_back
     mode tcp
     balance roundrobin
     option tcp-check
-    server pg_slave1 pg_slave1:5433 check
-    server pg_slave2 pg_slave2:5433 check
+    server pg_slave1 pg_slave1:5432 check
+    server pg_slave2 pg_slave2:5432 check
 ```
 Пример того как работает приложение при отключении слейвов Postgres:  
 
+[Postgres.webm](https://github.com/user-attachments/assets/6285c773-0396-4f0d-aee1-21474567063b)
