@@ -8,7 +8,6 @@
 * Redis, RabbitMQ, подключающиеся в Docker Compose.  
 ### Начало работы
 Склонировать проект, сделать cd в корень репозитория и запустить Docker Compose.  
-Дождаться статуса healthy на контейнерах postres - контейнеры станет healthy когда восстановится бэкап(может занять некоторое время).  
 ```bash
 https://github.com/npctheory/highload-loadbalancer.git
 cd highload-loadbalancer
