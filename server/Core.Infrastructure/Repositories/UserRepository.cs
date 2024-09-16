@@ -11,12 +11,14 @@ namespace Core.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly string _connectionString;
+        private readonly string _connectionStringWrite;
+        private readonly string _connectionStringRead;
         private readonly IMapper _mapper;
 
-        public UserRepository(string connectionString, IMapper mapper)
+        public UserRepository(string connectionStringWrite, string connectionStringRead, IMapper mapper)
         {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+            _connectionStringWrite = connectionStringWrite ?? throw new ArgumentNullException(nameof(connectionStringWrite));
+            _connectionStringRead = connectionStringRead ?? throw new ArgumentNullException(nameof(connectionStringRead));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
@@ -24,7 +26,7 @@ namespace Core.Infrastructure.Repositories
         {
             if (string.IsNullOrEmpty(userId)) throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
 
-            using (var connection = new NpgsqlConnection(_connectionString))
+            using (var connection = new NpgsqlConnection(_connectionStringRead))
             {
                 await connection.OpenAsync();
 
@@ -62,7 +64,7 @@ namespace Core.Infrastructure.Repositories
 
             var users = new List<User>();
 
-            using (var connection = new NpgsqlConnection(_connectionString))
+            using (var connection = new NpgsqlConnection(_connectionStringRead))
             {
                 await connection.OpenAsync();
 
@@ -104,7 +106,7 @@ namespace Core.Infrastructure.Repositories
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            using (var connection = new NpgsqlConnection(_connectionString))
+            using (var connection = new NpgsqlConnection(_connectionStringWrite))
             {
                 await connection.OpenAsync();
 

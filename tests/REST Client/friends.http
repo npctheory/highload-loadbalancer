@@ -1,11 +1,11 @@
 @host=localhost:80
-@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJFbnRlclNob3c5MzcyIiwiZ2l2ZW5fbmFtZSI6IldpbGxpYW0iLCJmYW1pbHlfbmFtZSI6IldhdHNvbiIsImp0aSI6ImYzYzM1ZjExLWRhMWItNDRkOS05ZTVmLWRlNGQzNTc4ZmZhMyIsImV4cCI6MTcyOTA0NzYwNiwiaXNzIjoiSGlnaGxvYWRTb2NpYWwiLCJhdWQiOiJIaWdobG9hZFNvY2lhbCJ9.JdThIhc8AK6bI5gAdo3Om3sLqhBCjRRzotQLF1qF7vM
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVc2VyIiwiZ2l2ZW5fbmFtZSI6IlVzZXIiLCJmYW1pbHlfbmFtZSI6IlVzZXIiLCJqdGkiOiJhZDgwNjA3ZC01NmI2LTQ4ODgtODhjMi0xMWYyZTc4ODg5OGQiLCJleHAiOjIwNDE4MTAxOTksImlzcyI6IkhpZ2hsb2FkU29jaWFsIiwiYXVkIjoiSGlnaGxvYWRTb2NpYWwifQ.us6xdtTtsNiKOcIkjXO_XNM8FAXiL6zxFjd2WQpW5lk
 ### Login
 POST http://{{host}}/login
 Content-Type: application/json
 
 {
-  "id": "EnterShow9372",
+  "id": "User",
   "password": "password"
 }
 
@@ -16,11 +16,11 @@ Authorization: Bearer {{token}}
 
 
 ### Delete friend
-PUT http://{{host}}/friend/delete/AlthoughAhead5680
+PUT http://{{host}}/friend/delete/AccountLess3602
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 ### Set friend
-PUT http://{{host}}/friend/set/AlthoughAhead5680
+PUT http://{{host}}/friend/set/AccountLess3602
 Content-Type: application/json
 Authorization: Bearer {{token}}

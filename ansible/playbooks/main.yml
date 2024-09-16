@@ -1,0 +1,139 @@
+---
+- name: Настроить репликацию на два слейва. pg_master-primary pg_slave1 pg_slave2-secondary.
+  hosts: highload_servers
+  become: true
+  gather_facts: false
+
+  vars:
+    pg_admin_user: postgres
+    pg_admin_password: postgres
+    pg_db_name: highloadsocial
+    docker_network_name: highload_net
+    pg_hba_conf_path: /var/lib/postgresql/data/pg_hba.conf
+    image_filters: '--filter ancestor=db:local'
+      
+  tasks:
+    - name: Установить ssl=off
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: ssl
+        value: off
+      when: inventory_hostname in groups['pg_servers']
+
+    - name: Установить wal_level=replica
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: wal_level
+        value: replica
+      when: inventory_hostname in groups['pg_servers']
+
+    - name: Установить max_wal_senders=20
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: max_wal_senders
+        value: 20
+      when: inventory_hostname in groups['pg_servers']
+
+    - name: Получить подсеть докера
+      command: docker network inspect {{ docker_network_name }}
+      register: network_info_raw
+      delegate_to: localhost
+
+    - name: Добавить запись в pg_hba.conf
+      postgresql_pg_hba:
+        dest: /var/lib/postgresql/data/pg_hba.conf
+        contype: host
+        users: replicator
+        source: "{{ (network_info_raw.stdout | from_json)[0].IPAM.Config[0].Subnet }}"
+        databases: replication
+        method: md5
+      when: inventory_hostname in groups['pg_servers']
+ 
+    - name: Создать standby.signal на pg_slave1 и pg_slave2
+      file:
+        path: /var/lib/postgresql/data/standby.signal
+        state: touch
+        owner: postgres
+        group: postgres
+        mode: '0644'
+      when: inventory_hostname in groups['pg_slaves']
+      
+    - name: Установить conninfo pg_slave1 и pg_slave2
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: primary_conninfo
+        value: "host=pg_master port=5432 user=replicator password=pass application_name={{inventory_hostname}}"
+      when: inventory_hostname in groups['pg_slaves'] 
+      
+    - name: Вывести conninfo
+      debug:
+        msg:
+          - "host=pg_master port=5432 user=replicator password=pass application_name={{inventory_hostname}}"
+      when: inventory_hostname in groups['pg_slaves']
+      
+    - name: Установить synchronous_commit на pg_master
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: synchronous_commit
+        value: "on"
+      when: inventory_hostname in groups['pg_masters'] 
+ 
+    - name: Установить synchronous_standby_names ANY на pg_master
+      community.postgresql.postgresql_set:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        name: synchronous_standby_names
+        value: "ANY 1 ({{ groups['pg_slaves'] | join(', ') }})"
+      when: inventory_hostname in groups['pg_masters']
+ 
+    - name: Получить имена контейнеров для перезагрузки
+      command: docker container ls -a {{ image_filters }} --format "{{ '{{' }}.Names {{ '}}' }} {{ '{{' }}.Image {{ '}}' }}"
+      register: docker_images
+      run_once: true
+      delegate_to: localhost
+
+    - name: Перезагрузка баз
+      docker_container:
+        name: "{{ item.split(' ')[0]}}"
+        image: "{{ item.split(' ')[1]}}"
+        state: started
+        restart: yes
+      loop: "{{ docker_images.stdout_lines}}"
+      run_once: true
+      delegate_to: localhost
+
+    - name: Проверить pg_stat_replication
+      community.postgresql.postgresql_query:
+        db: "{{ pg_db_name }}"
+        login_host: "{{ inventory_hostname }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        query: "select application_name, sync_state from pg_stat_replication;"
+      register: replication_status
+      until: replication_status.query_result | length > 0
+      retries: 30
+      delay: 10
+      when: "'pg_master' in inventory_hostname"
+
+    - name: Вывести pg_stat_replication
+      debug:
+        msg:
+          - "{{ replication_status.query_result }}"
+      when: "'pg_master' in inventory_hostname"

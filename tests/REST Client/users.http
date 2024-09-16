@@ -1,7 +1,7 @@
-@host=localhost:80
+@host=localhost:8080
 
 ### Get by id
-GET http://{{host}}/user/get/EnterShow9372
+GET http://{{host}}/user/get/LadyGaga
 Content-Type: application/json
 
 ### Search

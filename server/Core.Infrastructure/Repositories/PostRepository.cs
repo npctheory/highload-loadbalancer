@@ -12,12 +12,14 @@ namespace Core.Infrastructure.Repositories;
 
 public class PostRepository : IPostRepository
 {
-    private readonly string _connectionString;
+    private readonly string _connectionStringWrite;
+    private readonly string _connectionStringRead;
     private readonly IMapper _mapper;
 
-    public PostRepository(string connectionString, IMapper mapper)
+    public PostRepository(string connectionStringWrite, string connectionStringRead, IMapper mapper)
     {
-        _connectionString = connectionString;
+        _connectionStringWrite = connectionStringWrite ?? throw new ArgumentNullException(nameof(connectionStringWrite));
+        _connectionStringRead = connectionStringRead ?? throw new ArgumentNullException(nameof(connectionStringRead));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -25,7 +27,7 @@ public class PostRepository : IPostRepository
     {
         var posts = new List<Post>();
 
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringRead))
         {
             await connection.OpenAsync();
 
@@ -54,7 +56,7 @@ public class PostRepository : IPostRepository
     {
         var posts = new List<Post>();
 
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringRead))
         {
             await connection.OpenAsync();
 
@@ -87,7 +89,7 @@ public class PostRepository : IPostRepository
 
     public async Task<Post> GetPostById(Guid postId)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringRead))
         {
             await connection.OpenAsync();
 
@@ -115,7 +117,7 @@ public class PostRepository : IPostRepository
 
     public async Task<Post> CreatePost(string userId, string text)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringWrite))
         {
             await connection.OpenAsync();
 
@@ -144,7 +146,7 @@ public class PostRepository : IPostRepository
 
     public async Task<Post> UpdatePost(string userId, Guid postId, string text)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringWrite))
         {
             await connection.OpenAsync();
 
@@ -174,7 +176,7 @@ public class PostRepository : IPostRepository
 
     public async Task<Post> DeletePost(string userId, Guid postId)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringWrite))
         {
             await connection.OpenAsync();
 

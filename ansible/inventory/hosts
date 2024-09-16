@@ -1,0 +1,18 @@
+[highload_servers]
+pg_master ansible_connection=docker
+pg_slave1 ansible_connection=docker
+pg_slave2 ansible_connection=docker
+server1 ansible_connection=docker
+server2 ansible_connection=docker
+
+[pg_servers]
+pg_master ansible_connection=docker
+pg_slave1 ansible_connection=docker
+pg_slave2 ansible_connection=docker
+
+[pg_masters]
+pg_master ansible_connection=docker
+
+[pg_slaves]
+pg_slave1 ansible_connection=docker
+pg_slave2 ansible_connection=docker

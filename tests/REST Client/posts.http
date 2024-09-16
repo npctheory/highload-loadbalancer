@@ -1,12 +1,12 @@
-@host=localhost:8080
-@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJMYWR5R2FnYSIsImdpdmVuX25hbWUiOiJMYWR5IiwiZmFtaWx5X25hbWUiOiJHYWdhIiwianRpIjoiODIwOTRhNTktOTczNS00NzAzLWE0NTYtYjUzYzMwOTZkZDA2IiwiZXhwIjoyMDQxMTk1OTgxLCJpc3MiOiJIaWdobG9hZFNvY2lhbCIsImF1ZCI6IkhpZ2hsb2FkU29jaWFsIn0.3TVvta8d-pXCz9_AFRB-Anp9Sx0a5hBFXYxyrVtFIIQ
+@host=localhost:80
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJVc2VyIiwiZ2l2ZW5fbmFtZSI6IlVzZXIiLCJmYW1pbHlfbmFtZSI6IlVzZXIiLCJqdGkiOiIwMzZkN2QzYS0zM2ViLTRiYTctOGFiNy03OGQ3Y2Y4NzVmNzIiLCJleHAiOjIwNDE4MTA1MzEsImlzcyI6IkhpZ2hsb2FkU29jaWFsIiwiYXVkIjoiSGlnaGxvYWRTb2NpYWwifQ.2_X_7S9GG6A9kI8e0amOFOD0ccPlB6R280lyxq-ywEY
 
 ### Login
 POST http://{{host}}/login
 Content-Type: application/json
 
 {
-  "id": "LadyGaga",
+  "id": "User",
   "password": "password"
 }
 
@@ -21,7 +21,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 ### GetById
-GET http://{{host}}/post/get/fcbcf1e5-7acb-4e0b-9fb5-df32f85d882d
+GET http://{{host}}/post/get/448a3697-cdf4-4a8d-ac7e-3106f622e39a
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

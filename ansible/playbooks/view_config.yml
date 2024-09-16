@@ -1,0 +1,57 @@
+---
+- name: Get PostgreSQL configuration from servers
+  hosts: pg_servers
+  gather_facts: true
+
+  vars:
+    pg_admin_user: postgres
+    pg_admin_password: postgres
+    pg_db_name: user
+    pg_hba_conf_path: /var/lib/postgresql/data/pg_hba.conf
+
+  tasks:
+    - name: Fetch Docker network info
+      ansible.builtin.shell: docker network inspect pg_net
+      register: docker_subnet_info
+      changed_when: false
+      delegate_to: localhost
+
+    - name: Retrieve PostgreSQL configuration
+      ansible.builtin.command: >
+        psql -U {{ pg_admin_user }} -d {{ pg_db_name }}
+        -c "SHOW wal_level;"
+        -c "SHOW max_wal_senders;"
+        -c "SHOW ssl;"
+        -c "SELECT pg_is_in_recovery();"  # Check if server is a standby
+        -tA
+      register: postgres_config
+      changed_when: false
+
+    - name: Check if PostgreSQL role 'replicator' exists
+      ansible.builtin.postgresql_query:
+        db: "{{ pg_db_name }}"
+        login_user: "{{ pg_admin_user }}"
+        login_password: "{{ pg_admin_password }}"
+        query: "SELECT 1 FROM pg_roles WHERE rolname = 'replicator';"
+      register: replicator_role_check
+      ignore_errors: true
+
+    - name: Get pg_hba.conf entries
+      ansible.builtin.postgresql_pg_hba:
+        dest: "{{ pg_hba_conf_path }}"
+      register: pg_hba_entries
+      ignore_errors: true
+
+    - set_fact:
+        postgres_config_info:
+          subnet: "{{ docker_subnet_info.stdout | from_json | json_query('[].IPAM.Config[0].Subnet') | first }}"
+          wal_level: "{{ postgres_config.stdout_lines[0] }}"
+          max_wal_senders: "{{ postgres_config.stdout_lines[1] }}"
+          ssl_enabled: "{{ 'enabled' if postgres_config.stdout_lines[2] == 'on' else 'disabled' }}"
+          standby_server: "{{ 'Yes' if postgres_config.stdout_lines[3] == 't' else 'No' }}"
+          primary_conninfo: "{{ postgres_config.stdout_lines[4] if postgres_config.stdout_lines | length > 4 else 'N/A' }}"
+          replicator_role_exists: "{{ replicator_role_check.rowcount }}"
+          pg_hba_entries: "{{ pg_hba_entries.entries | default([]) }}"
+
+    - debug:
+        var: postgres_config_info

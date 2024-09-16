@@ -11,18 +11,20 @@ namespace Core.Infrastructure.Repositories;
 
 public class FriendshipRepository : IFriendshipRepository
 {
-    private readonly string _connectionString;
+    private readonly string _connectionStringWrite;
+    private readonly string _connectionStringRead;
     private readonly IMapper _mapper;
 
-    public FriendshipRepository(string connectionString, IMapper mapper)
+    public FriendshipRepository(string connectionStringWrite, string connectionStringRead, IMapper mapper)
     {
-        _connectionString = connectionString;
+        _connectionStringWrite = connectionStringWrite ?? throw new ArgumentNullException(nameof(connectionStringWrite));
+            _connectionStringRead = connectionStringRead ?? throw new ArgumentNullException(nameof(connectionStringRead));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     public async Task AddFriendship(string userId, string friendId)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringWrite))
         {
             await connection.OpenAsync();
             using (var command = new NpgsqlCommand("INSERT INTO friendships (user_id, friend_id) VALUES (@UserId, @FriendId)", connection))
@@ -37,7 +39,7 @@ public class FriendshipRepository : IFriendshipRepository
 
     public async Task DeleteFriendship(string userId, string friendId)
     {
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringWrite))
         {
             await connection.OpenAsync();
             using (var command = new NpgsqlCommand("DELETE FROM friendships WHERE user_id = @UserId AND friend_id = @FriendId", connection))
@@ -54,7 +56,7 @@ public class FriendshipRepository : IFriendshipRepository
     {
         var friendships = new List<Friendship>();
 
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringRead))
         {
             await connection.OpenAsync();
             using (var command = new NpgsqlCommand("SELECT friend_id FROM friendships WHERE user_id = @UserId", connection))
@@ -84,7 +86,7 @@ public class FriendshipRepository : IFriendshipRepository
     {
         var friendships = new List<Friendship>();
 
-        using (var connection = new NpgsqlConnection(_connectionString))
+        using (var connection = new NpgsqlConnection(_connectionStringRead))
         {
             await connection.OpenAsync();
             using (var command = new NpgsqlCommand("SELECT user_id FROM friendships WHERE friend_id = @FriendId", connection))

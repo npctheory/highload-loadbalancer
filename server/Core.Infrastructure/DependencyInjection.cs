@@ -44,48 +44,33 @@ namespace Core.Infrastructure
 
             services.AddScoped<IUserRepository>(sp =>
             {
-                var connectionString = configuration.GetSection("DatabaseSettings:ConnectionString").Value;
+                var connectionStringWrite = configuration.GetSection("DatabaseSettings:ConnectionStringWrite").Value;
+                var connectionStringRead = configuration.GetSection("DatabaseSettings:ConnectionStringRead").Value;
                 var mapper = sp.GetRequiredService<IMapper>();
-                return new UserRepository(connectionString, mapper);
+                return new UserRepository(connectionStringWrite, connectionStringRead, mapper);
             });
 
             services.AddScoped<IFriendshipRepository>(sp =>
             {
-                var connectionString = configuration.GetSection("DatabaseSettings:ConnectionString").Value;
+                var connectionStringWrite = configuration.GetSection("DatabaseSettings:ConnectionStringWrite").Value;
+                var connectionStringRead = configuration.GetSection("DatabaseSettings:ConnectionStringRead").Value;
                 var mapper = sp.GetRequiredService<IMapper>();
-                return new FriendshipRepository(connectionString, mapper);
+                return new FriendshipRepository(connectionStringWrite, connectionStringRead, mapper);
             });
 
             services.AddScoped<IPostRepository>(sp =>
             {
-                var connectionString = configuration.GetSection("DatabaseSettings:ConnectionString").Value;
+                var connectionStringWrite = configuration.GetSection("DatabaseSettings:ConnectionStringWrite").Value;
+                var connectionStringRead = configuration.GetSection("DatabaseSettings:ConnectionStringRead").Value;
                 var mapper = sp.GetRequiredService<IMapper>();
-                return new PostRepository(connectionString, mapper);
+                return new PostRepository(connectionStringWrite, connectionStringRead, mapper);
             });
 
-            var repositoryType = configuration.GetSection("DialogRepositorySettings:Type").Value;
-
-            if (repositoryType == "Redis")
+            services.AddScoped<IDialogRepository>(sp =>
             {
-                services.AddScoped<IDialogRepository>(sp =>
-                {
-                    var redis = sp.GetRequiredService<IConnectionMultiplexer>();
-                    return new RedisDialogRepository(redis, databaseIndex: 1);
-                });
-            }
-            else if (repositoryType == "Postgres")
-            {
-                services.AddScoped<IDialogRepository>(sp =>
-                {
-                    var connectionString = configuration.GetSection("DatabaseSettings:ConnectionString").Value;
-                    var mapper = sp.GetRequiredService<IMapper>();
-                    return new PostgresDialogRepository(connectionString, mapper);
-                });
-            }
-            else
-            {
-                throw new Exception("Invalid repository type specified in configuration.");
-            }
+                var redis = sp.GetRequiredService<IConnectionMultiplexer>();
+                return new RedisDialogRepository(redis, databaseIndex: 1);
+            });
 
 
             return services;

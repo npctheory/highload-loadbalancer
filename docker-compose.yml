@@ -10,8 +10,6 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "35432:5432"
     volumes:
       - pg_master:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +20,67 @@ services:
       start_period: 30s
     networks:
       - highload_net
- 
+
+  pg_slave1:
+    image: db:local
+    container_name: pg_slave1
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_slave1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "bash", "/docker-healthcheck/check_postgres_seed.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 99999
+      start_period: 30s
+    depends_on:
+      pg_master:
+        condition: service_started
+    networks:
+      - highload_net
+
+  pg_slave2:
+    image: db:local
+    container_name: pg_slave2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_slave2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "bash", "/docker-healthcheck/check_postgres_seed.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 99999
+      start_period: 30s
+    depends_on:
+      pg_master:
+        condition: service_started
+    networks:
+      - highload_net
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: unless-stopped
+    ports:
+      - "35432:5432"
+      - "35433:5433"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    depends_on:
+      - pg_master
+      - pg_slave1
+      - pg_slave2
+    networks:
+      - highload_net
+  
  
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -59,13 +117,22 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      
+  # redisinsight:
+  #   image: redis/redisinsight:latest
+  #   container_name: redisinsight
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5540:5540"
+  #   networks:
+  #     - highload_net
 
-  server:
+  server1:
     build:
       context: ./server
       dockerfile: ./Core.Api/Dockerfile
     image: server:local
-    container_name: server
+    container_name: server1
     restart: unless-stopped
     environment:
       PRIMARY_DB_HOST: pg_master
@@ -81,22 +148,61 @@ services:
         condition: service_healthy
     networks:
       - highload_net
-    ports:
-      - "8080:80"
-      
-  redisinsight:
-    image: redis/redisinsight:latest
-    container_name: redisinsight
+
+  server2:
+    image: server:local
+    container_name: server2
     restart: unless-stopped
-    ports:
-      - "5540:5540"
+    environment:
+      PRIMARY_DB_HOST: pg_master
+      PRIMARY_DB_PORT: 5432
+      PRIMARY_DB_NAME: highloadsocial
+      PRIMARY_DB_USER: postgres
+      PRIMARY_DB_PASSWORD: postgres
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://*:80"
+      DialogRepositorySettings__Type: "Redis"
+    depends_on:
+      pg_master:
+        condition: service_healthy
+      server1:
+        condition: service_started
     networks:
       - highload_net
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - server1
+      - server2
+    networks:
+      - highload_net
+
+  ansible:
+    build:
+      context: ./ansible
+      dockerfile: Dockerfile
+    container_name: ansible
+    restart: unless-stopped
+    networks:
+      - highload_net
+    volumes:
+      - ./ansible/playbooks/:/ansible/playbooks
+      - /var/run/docker.sock:/var/run/docker.sock
+
 volumes:
   pg_master:
+  pg_slave1:
+  pg_slave2:
   pgadmin_data:
 
 networks:
   highload_net:
     driver: bridge
+    external: true
