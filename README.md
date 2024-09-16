@@ -32,40 +32,7 @@ ansible-playbook playbooks/main.yml
 ### Nginx  
 Docker Compose запустит два инстанса бэкенда: server1 и server2.  
 В контейнере nginx будет запущен реверс-прокси, который будет распределять между ними запросы.  
-Конфигурация Nginx:  
-```
-http {
-    upstream backend_servers {
-        server server1:80;
-        server server2:80;
-    }
-
-    server {
-        listen 80;
-
-        location / {
-            proxy_pass http://backend_servers;
-
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "Upgrade";
-
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            proxy_read_timeout 3600s;
-            proxy_send_timeout 3600s;
-            proxy_connect_timeout 60s;
-        }
-    }
-
-}
-events {
-    worker_connections 1024;
-}
-```
+Конфигурация Nginx: [nginx.conf](https://github.com/npctheory/highload-loadbalancer/blob/main/nginx.conf)  
 
 Пример того как работает приложение при отключении инстансов бэкенда:  
 
@@ -75,41 +42,8 @@ events {
 ### HAProxy
 Docker Compose запустит три сервера Postgres: pg_master, pg_slave1, pg_slave2. Если плейбук main.yml, отработал то включится primary-secondary репликация, в которой pg_master будет primary, а pg_slave1 и pg_slave2 - secondary.    
 В контейнере haproxy будет запущен TCP-балансировщик, который будет направлять запросы на порт 5432 на pg_master, а запросы на порт 5433 распределять между pg_slave1 и pg_slave2. В .NET приложении sql-запросы на запись используют в соединении порт 5432, а sql-запросы на чтение порт 5433.    
-Конфигурация HAProxy:  
-```
-global
-    log stdout format raw local0
+Конфигурация HAProxy: [haproxy.cfg](https://github.com/npctheory/highload-loadbalancer/blob/main/haproxy.cfg)  
 
-defaults
-    log global
-    option tcplog
-    timeout connect 5s
-    timeout client 1m
-    timeout server 1m
-
-frontend pg_write_front
-    bind *:5432
-    mode tcp
-    default_backend pg_write_back
-
-frontend pg_read_front
-    bind *:5433
-    mode tcp
-    default_backend pg_read_back
-
-backend pg_write_back
-    mode tcp
-    balance roundrobin
-    option tcp-check
-    server pg_master pg_master:5432 check
-
-backend pg_read_back
-    mode tcp
-    balance roundrobin
-    option tcp-check
-    server pg_slave1 pg_slave1:5432 check
-    server pg_slave2 pg_slave2:5432 check
-```
 Пример того как работает приложение при отключении слейвов Postgres:  
 
 [Postgres.webm](https://github.com/user-attachments/assets/6285c773-0396-4f0d-aee1-21474567063b)
