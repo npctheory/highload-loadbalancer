@@ -1,13 +1,13 @@
 ## О проекте
 Домашнее задание по балансировке.  
 Проект состоит из следующих компонентов:  
-* Приложение .NET 8 WebApi в папке ./server, которое собирается в образ server:local и контейнеры server1 и server2  
+* Приложение .NET WebApi в папке ./server, которое собирается в образ server:local и контейнеры server1 и server2  
 * Бэкап postgres в папке ./db, который собирается в образ db:local. На его основе создаются контейнеры pg_master, pg_slave1, pg_slave2  
 * Контейниризованный ansible в папке ./ansible. В папке ./ansible/playbooks находится плейбук main.yml, необходимый для настройки стриминговой репликации pg_master -> pg_slave1, pg_slave2.
-*
+* Nginx и HAProxy, подключающиеся в Docker Compose. Конфигурационные файлы в корневой папке репозитория.
+* Redis, RabbitMQ, подключающиеся в Docker Compose.  
 ### Начало работы
 Склонировать проект, сделать cd в корень репозитория и запустить Docker Compose.  
-Дождаться статуса healthy на контейнерах postres - контейнеры станет healthy когда восстановится бэкап(может занять некоторое время).  
 ```bash
 https://github.com/npctheory/highload-loadbalancer.git
 cd highload-loadbalancer
@@ -20,14 +20,14 @@ docker network create highload_net
 ```bash
 docker compose up --build -d
 ```
-Для того чтобы репликация работала выполнить плейбук:  
+Когда все контейнеры будут запущены, для того чтобы репликация работала, выполнить плейбук main.yml:  
 ```bash
 docker exec -it ansible bash
-```
-```bash
 ansible-playbook playbooks/main.yml
 ```
 Как это всё вместе должно работать:  
+
+[setup.webm](https://github.com/user-attachments/assets/77300490-5382-4f02-aa14-2d342c9c911b)
 
 ### Nginx  
 Docker Compose запустит два инстанса бэкенда: server1 и server2.  
@@ -67,8 +67,9 @@ events {
 }
 ```
 
-На видео показано что происходит при отключениях инстансов бэкенда:  
+Пример того как работает приложение при отключении инстансов бэкенда:  
 
+[nginx.webm](https://github.com/user-attachments/assets/bf1b3746-1e33-4ece-94f9-0db4ff3fc42f)
 
 
 ### HAProxy
@@ -106,7 +107,9 @@ backend pg_read_back
     mode tcp
     balance roundrobin
     option tcp-check
-    server pg_slave1 pg_slave1:5433 check
-    server pg_slave2 pg_slave2:5433 check
+    server pg_slave1 pg_slave1:5432 check
+    server pg_slave2 pg_slave2:5432 check
 ```
 Пример того как работает приложение при отключении слейвов Postgres:  
+
+[Postgres.webm](https://github.com/user-attachments/assets/6285c773-0396-4f0d-aee1-21474567063b)
