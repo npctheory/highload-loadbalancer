@@ -23,8 +23,6 @@ docker compose up --build -d
 Когда все контейнеры будут запущены, для того чтобы репликация работала, выполнить плейбук main.yml:  
 ```bash
 docker exec -it ansible bash
-```
-```bash
 ansible-playbook playbooks/main.yml
 ```
 Как это всё вместе должно работать:  
