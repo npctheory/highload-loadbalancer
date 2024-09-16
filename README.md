@@ -4,7 +4,8 @@
 * Приложение .NET WebApi в папке ./server, которое собирается в образ server:local и контейнеры server1 и server2  
 * Бэкап postgres в папке ./db, который собирается в образ db:local. На его основе создаются контейнеры pg_master, pg_slave1, pg_slave2  
 * Контейниризованный ansible в папке ./ansible. В папке ./ansible/playbooks находится плейбук main.yml, необходимый для настройки стриминговой репликации pg_master -> pg_slave1, pg_slave2.
-*
+* Nginx и HAProxy, подключающиеся в Docker Compose. Конфигурационные файлы в корневой папке репозитория.
+* Redis, RabbitMQ, подключающиеся в Docker Compose.  
 ### Начало работы
 Склонировать проект, сделать cd в корень репозитория и запустить Docker Compose.  
 Дождаться статуса healthy на контейнерах postres - контейнеры станет healthy когда восстановится бэкап(может занять некоторое время).  
